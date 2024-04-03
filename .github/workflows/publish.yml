@@ -27,7 +27,7 @@ jobs:
       - name: Install Node.js and npm
         uses: actions/setup-node@v3
         with:
-          node-version: 16.x
+          node-version: 18.x
           registry-url: https://registry.npmjs.org
 
       - name: Install dependencies
@@ -44,11 +44,11 @@ jobs:
           TEMP_ARRAY=($(echo $GITHUB_REF | tr "/" "\n"))
           TAG=${TEMP_ARRAY[@]: -1}
           PACKAGE_VERSION=${TAG:1}
-          mkdir "serverless-${PACKAGE_VERSION}"
-          tar zxf "serverless-${PACKAGE_VERSION}.tgz" -C "serverless-${PACKAGE_VERSION}"
-          cp -R test "serverless-${PACKAGE_VERSION}/package"
-          ln -s "$(pwd)"/node_modules "serverless-${PACKAGE_VERSION}/package/node_modules"
-          cd "serverless-${PACKAGE_VERSION}/package"
+          mkdir "serverless-framework-${PACKAGE_VERSION}"
+          tar zxf "serverless-framework-${PACKAGE_VERSION}.tgz" -C "serverless-framework-${PACKAGE_VERSION}"
+          cp -R test "serverless-framework-${PACKAGE_VERSION}/package"
+          ln -s "$(pwd)"/node_modules "serverless-framework-${PACKAGE_VERSION}/package/node_modules"
+          cd "serverless-framework-${PACKAGE_VERSION}/package"
           script -e -c "npm test -- -b"
 
   npmPublish:
@@ -75,7 +75,7 @@ jobs:
       - name: Install Node.js and npm
         uses: actions/setup-node@v3
         with:
-          node-version: 16.x
+          node-version: 18.x
           registry-url: https://registry.npmjs.org
 
       # Normally we have a guarantee that deps are already there, still it may not be the case when:
@@ -109,6 +109,26 @@ jobs:
           TAG=${TEMP_ARRAY[@]: -1}
           npm run pkg:upload -- $TAG
 
+  githubPackagePublish:
+    runs-on: ubuntu-latest
+    needs: prePublishPackageTest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      # Setup .npmrc file to publish to GitHub Packages
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18.x'
+          registry-url: 'https://npm.pkg.github.com'
+          # Defaults to the user or organization that owns the workflow file
+          scope: '@octocat'
+      - run: npm ci
+      - run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   chocoPublish:
     name: Publish to Chocolatey
     needs: npmPublish
@@ -130,7 +150,7 @@ jobs:
       - name: Install Node.js and npm
         uses: actions/setup-node@v3
         with:
-          node-version: 16.x
+          node-version: 18.x
           registry-url: https://registry.npmjs.org
 
       # Note: No need to install dependencies as we have retrieved cached `node_modules` for very
