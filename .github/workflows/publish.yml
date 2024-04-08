@@ -22,7 +22,7 @@ jobs:
           path: |
             ~/.npm
             node_modules
-          key: npm-v16-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('package.json') }}
+          key: npm-v18-${{ runner.os }}-${{ github.ref }}-${{ hashFiles('package.json') }}
 
       - name: Install Node.js and npm
         uses: actions/setup-node@v3
@@ -71,7 +71,7 @@ jobs:
           path: |
             ~/.npm
             node_modules
-          key: npm-v16-${{ runner.os }}-refs/heads/main-${{ hashFiles('package.json') }}
+          key: npm-v18-${{ runner.os }}-refs/heads/main-${{ hashFiles('package.json') }}
 
       - name: Install Node.js and npm
         uses: actions/setup-node@v3
@@ -128,7 +128,7 @@ jobs:
           path: |
             ~/.npm
             node_modules
-          key: npm-v16-${{ runner.os }}-refs/heads/main-${{ hashFiles('package.json') }}
+          key: npm-v18-${{ runner.os }}-refs/heads/main-${{ hashFiles('package.json') }}
 
       - uses: actions/setup-node@v4
         with:
@@ -143,7 +143,11 @@ jobs:
           npm update --no-save
           npm update --save-dev --no-save
 
-      - run: npm ci
+      - name: Remove all other registries
+        run: npm config delete registry
+
+      - name: Create npmrc for GitHub Packages
+        run: echo "@${{ github.repository_owner }}:registry=https://npm.pkg.github.com" > .npmrc
 
       - run: npm publish
         env:
@@ -165,7 +169,7 @@ jobs:
           path: |
             ~/.npm
             node_modules
-          key: npm-v16-${{ runner.os }}-refs/heads/main-${{ hashFiles('package.json') }}
+          key: npm-v18-${{ runner.os }}-refs/heads/main-${{ hashFiles('package.json') }}
 
       - name: Install Node.js and npm
         uses: actions/setup-node@v3
